@@ -1,30 +1,38 @@
 import React, { useState, useEffect } from 'react';
-import { io } from 'socket.io-client';
-
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
-const socket = io(SERVER_URL);
+import { db } from '../firebase';
+import { ref, onValue, update } from "firebase/database";
 
 export default function AdminPage() {
   const [gameState, setGameState] = useState(null);
 
   useEffect(() => {
-    socket.on('gameState', (state) => {
-      setGameState(state);
+    const gameRef = ref(db, 'gameState');
+    const unsubscribe = onValue(gameRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        setGameState(data);
+      } else {
+        // Init state jika belum ada di database
+        const initialState = {
+          rounds: {
+            1: 'user_win',
+            2: 'user_win',
+            3: 'user_win'
+          }
+        };
+        update(ref(db), { gameState: initialState });
+      }
     });
-    return () => socket.off('gameState');
+    return () => unsubscribe();
   }, []);
 
   const handleUpdateRound = (round, status) => {
-    const newState = {
-      rounds: {
-        ...gameState.rounds,
-        [round]: status
-      }
+    const newRounds = {
+      ...gameState.rounds,
+      [round]: status
     };
-    // Optimistic UI update
-    setGameState({ ...gameState, ...newState });
-    // Emit to server
-    socket.emit('updateAdminState', newState);
+    // Emit to Firebase
+    update(ref(db, 'gameState/rounds'), newRounds);
   };
 
   if (!gameState) {

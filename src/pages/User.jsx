@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trophy, MessageCircle, Gift, Sparkles, Bell, User as UserIcon, Star, Target, Gamepad2 } from 'lucide-react';
-import { io } from 'socket.io-client';
-
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
-const socket = io(SERVER_URL);
+import { db } from '../firebase';
+import { ref, onValue } from "firebase/database";
 
 const COLORS = [
   { id: 'red', value: '#ef4444', label: 'MERAH' },
@@ -30,10 +28,14 @@ export default function UserPage() {
   const [score, setScore] = useState(0);
 
   useEffect(() => {
-    socket.on('gameState', (state) => {
-      setGameState(state);
+    const gameRef = ref(db, 'gameState');
+    const unsubscribe = onValue(gameRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        setGameState(data);
+      }
     });
-    return () => socket.off('gameState');
+    return () => unsubscribe();
   }, []);
 
   const handleSelectColor = (color) => {
