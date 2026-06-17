@@ -248,9 +248,9 @@ export default function UserPage() {
                 <button 
                   className={`spin-btn ${isShuffling ? 'shuffling' : ''}`}
                   onClick={handleShuffle}
-                  disabled={!selectedColor || isShuffling}
+                  disabled={!selectedColor || isShuffling || !gameState}
                 >
-                  {isShuffling ? '🎲 MENGACAK DADU...' : `KOCOK RONDE ${currentRound}`}
+                  {isShuffling ? '🎲 MENGACAK DADU...' : (!gameState ? '⏳ MENUNGGU PENGATURAN ADMIN...' : `KOCOK RONDE ${currentRound}`)}
                 </button>
               ) : (
                 <div className="animate-pop" style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '2rem', borderRadius: '20px', border: '2px solid #3b82f6' }}>
